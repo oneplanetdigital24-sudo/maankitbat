@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, X, Upload, CheckCircle } from 'lucide-react';
 import { supabase, PollingStation, ManKiBatSubmission } from '../lib/supabase';
+import { compressImage } from '../lib/imageCompression';
 
 interface DataCollectionFormProps {
   lac: string;
@@ -43,15 +44,25 @@ export default function DataCollectionForm({ lac, onBack }: DataCollectionFormPr
     setLoading(false);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back') => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back') => {
     const file = e.target.files?.[0];
     if (file) {
-      if (type === 'front') {
-        setFrontImage(file);
-        setFrontImagePreview(URL.createObjectURL(file));
-      } else {
-        setBackImage(file);
-        setBackImagePreview(URL.createObjectURL(file));
+      try {
+        const compressedFile = await compressImage(file, 500);
+        const originalSizeKB = (file.size / 1024).toFixed(2);
+        const compressedSizeKB = (compressedFile.size / 1024).toFixed(2);
+        console.log(`Image compressed: ${originalSizeKB}KB -> ${compressedSizeKB}KB`);
+
+        if (type === 'front') {
+          setFrontImage(compressedFile);
+          setFrontImagePreview(URL.createObjectURL(compressedFile));
+        } else {
+          setBackImage(compressedFile);
+          setBackImagePreview(URL.createObjectURL(compressedFile));
+        }
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        alert('Failed to process image. Please try another image.');
       }
     }
   };
