@@ -92,20 +92,34 @@ export default function DataCollectionForm({ lac, onBack }: DataCollectionFormPr
   };
 
   const uploadImage = async (file: File, path: string) => {
-    const { data, error } = await supabase.storage
-      .from('man-ki-bat-images')
-      .upload(path, file);
+    try {
+      const { data, error } = await supabase.storage
+        .from('man-ki-bat-images')
+        .upload(path, file, {
+          contentType: file.type,
+          upsert: false
+        });
 
-    if (error) {
-      console.error('Upload error:', error);
+      if (error) {
+        console.error('Upload error details:', error);
+        alert(`Upload error: ${error.message}`);
+        return null;
+      }
+
+      if (!data) {
+        console.error('No data returned from upload');
+        return null;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('man-ki-bat-images')
+        .getPublicUrl(data.path);
+
+      return urlData.publicUrl;
+    } catch (err) {
+      console.error('Exception during upload:', err);
       return null;
     }
-
-    const { data: urlData } = supabase.storage
-      .from('man-ki-bat-images')
-      .getPublicUrl(data.path);
-
-    return urlData.publicUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
