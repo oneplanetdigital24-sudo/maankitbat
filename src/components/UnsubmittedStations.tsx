@@ -14,10 +14,16 @@ export default function UnsubmittedStations() {
   const [loading, setLoading] = useState(true);
   const [selectedLAC, setSelectedLAC] = useState<string>('All');
 
-  const lacs = ['All', 'Dhemaji', 'Sisiborgaon', 'Jonai'];
+  const lacs = ['All', '78-DHEMAJI (ST)', '79-SISIBORGAON', '80-JONAI (ST)'];
 
   useEffect(() => {
     fetchUnsubmittedStations();
+
+    const interval = setInterval(() => {
+      fetchUnsubmittedStations();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {

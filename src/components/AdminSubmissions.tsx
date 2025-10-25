@@ -9,8 +9,8 @@ interface Submission {
   total_attendances: number;
   venue: string;
   eminent_guests: string[];
-  front_image_url: string;
-  back_image_url: string;
+  front_image_data: string;
+  back_image_data: string;
   created_at: string;
 }
 
@@ -21,6 +21,12 @@ export default function AdminSubmissions() {
 
   useEffect(() => {
     fetchSubmissions();
+
+    const interval = setInterval(() => {
+      fetchSubmissions();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchSubmissions = async () => {

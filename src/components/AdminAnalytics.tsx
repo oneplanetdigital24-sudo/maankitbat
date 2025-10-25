@@ -22,6 +22,12 @@ export default function AdminAnalytics() {
 
   useEffect(() => {
     fetchAnalytics();
+
+    const interval = setInterval(() => {
+      fetchAnalytics();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchAnalytics = async () => {
@@ -37,7 +43,7 @@ export default function AdminAnalytics() {
       .select('lac, station_name');
 
     if (submissions && allStations) {
-      const lacs = ['Dhemaji', 'Sisiborgaon', 'Jonai'];
+      const lacs = ['78-DHEMAJI (ST)', '79-SISIBORGAON', '80-JONAI (ST)'];
       const lacStats: LACStats[] = [];
 
       let totalSubs = 0;
