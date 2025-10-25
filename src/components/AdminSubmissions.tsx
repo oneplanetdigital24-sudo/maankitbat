@@ -128,14 +128,14 @@ export default function AdminSubmissions() {
                 <td className="px-4 py-4">
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setSelectedImage(submission.front_image_url)}
+                      onClick={() => setSelectedImage(submission.front_image_data)}
                       className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-semibold flex items-center gap-1"
                     >
                       <ImageIcon className="w-4 h-4" />
                       Front
                     </button>
                     <button
-                      onClick={() => setSelectedImage(submission.back_image_url)}
+                      onClick={() => setSelectedImage(submission.back_image_data)}
                       className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm font-semibold flex items-center gap-1"
                     >
                       <ImageIcon className="w-4 h-4" />

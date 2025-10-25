@@ -91,35 +91,13 @@ export default function DataCollectionForm({ lac, onBack }: DataCollectionFormPr
     });
   };
 
-  const uploadImage = async (file: File, path: string) => {
-    try {
-      const { data, error } = await supabase.storage
-        .from('man-ki-bat-images')
-        .upload(path, file, {
-          contentType: file.type,
-          upsert: false
-        });
-
-      if (error) {
-        console.error('Upload error details:', error);
-        alert(`Upload error: ${error.message}`);
-        return null;
-      }
-
-      if (!data) {
-        console.error('No data returned from upload');
-        return null;
-      }
-
-      const { data: urlData } = supabase.storage
-        .from('man-ki-bat-images')
-        .getPublicUrl(data.path);
-
-      return urlData.publicUrl;
-    } catch (err) {
-      console.error('Exception during upload:', err);
-      return null;
-    }
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,21 +111,8 @@ export default function DataCollectionForm({ lac, onBack }: DataCollectionFormPr
     setSubmitting(true);
 
     try {
-      const timestamp = Date.now();
-      const frontImageUrl = await uploadImage(
-        frontImage,
-        `${lac}/${timestamp}-front-${frontImage.name}`
-      );
-      const backImageUrl = await uploadImage(
-        backImage,
-        `${lac}/${timestamp}-back-${backImage.name}`
-      );
-
-      if (!frontImageUrl || !backImageUrl) {
-        alert('Failed to upload images. Please try again.');
-        setSubmitting(false);
-        return;
-      }
+      const frontImageData = await fileToBase64(frontImage);
+      const backImageData = await fileToBase64(backImage);
 
       const submission: ManKiBatSubmission = {
         lac,
@@ -155,8 +120,8 @@ export default function DataCollectionForm({ lac, onBack }: DataCollectionFormPr
         total_attendances: parseInt(formData.total_attendances),
         venue: formData.venue,
         eminent_guests: formData.eminent_guests.filter(g => g.trim() !== ''),
-        front_image_url: frontImageUrl,
-        back_image_url: backImageUrl,
+        front_image_data: frontImageData,
+        back_image_data: backImageData,
       };
 
       const { error } = await supabase

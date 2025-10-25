@@ -3,7 +3,16 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+  },
+});
 
 export interface PollingStation {
   id: string;
@@ -19,8 +28,8 @@ export interface ManKiBatSubmission {
   total_attendances: number;
   venue: string;
   eminent_guests: string[];
-  front_image_url?: string;
-  back_image_url?: string;
+  front_image_data?: string;
+  back_image_data?: string;
   created_at?: string;
   updated_at?: string;
 }
