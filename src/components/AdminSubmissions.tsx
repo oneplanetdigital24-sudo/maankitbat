@@ -30,18 +30,23 @@ export default function AdminSubmissions() {
   }, []);
 
   const fetchSubmissions = async () => {
-    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('man_ki_bat_submissions')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    const { data, error } = await supabase
-      .from('man_ki_bat_submissions')
-      .select('*')
-      .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Error fetching submissions:', error);
+      } else if (data) {
+        setSubmissions(data);
+      }
 
-    if (!error && data) {
-      setSubmissions(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Exception in fetchSubmissions:', error);
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const formatDate = (dateString: string) => {

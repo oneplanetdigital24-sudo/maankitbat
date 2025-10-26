@@ -31,60 +31,82 @@ export default function AdminAnalytics() {
   }, []);
 
   const fetchAnalytics = async () => {
-    setLoading(true);
+    try {
+      const { data: submissions, error: submissionsError } = await supabase
+        .from('man_ki_bat_submissions')
+        .select('*')
+        .order('created_at', { ascending: true });
 
-    const { data: submissions } = await supabase
-      .from('man_ki_bat_submissions')
-      .select('*')
-      .order('created_at', { ascending: true });
+      const { data: allStations, error: stationsError } = await supabase
+        .from('polling_stations')
+        .select('lac, station_name');
 
-    const { data: allStations } = await supabase
-      .from('polling_stations')
-      .select('lac, station_name');
+      if (submissionsError) {
+        console.error('Error fetching submissions:', submissionsError);
+        setLoading(false);
+        return;
+      }
 
-    if (submissions && allStations) {
-      const lacs = ['78-DHEMAJI (ST)', '79-SISIBORGAON', '80-JONAI (ST)'];
-      const lacStats: LACStats[] = [];
+      if (stationsError) {
+        console.error('Error fetching stations:', stationsError);
+        setLoading(false);
+        return;
+      }
 
-      let totalSubs = 0;
-      let totalAtt = 0;
-      let totalSt = 0;
-      let submittedSt = 0;
+      if (submissions && allStations) {
+        console.log('Total submissions fetched:', submissions.length);
+        console.log('Total stations fetched:', allStations.length);
 
-      lacs.forEach((lac) => {
-        const lacSubmissions = submissions.filter((s) => s.lac === lac);
-        const lacStations = allStations.filter((s) => s.lac === lac);
-        const uniqueStations = new Set(lacSubmissions.map((s) => s.polling_station));
+        const lacs = ['78-DHEMAJI (ST)', '79-SISIBORGAON', '80-JONAI (ST)'];
+        const lacStats: LACStats[] = [];
 
-        const totalAttendances = lacSubmissions.reduce(
-          (sum, s) => sum + (s.total_attendances || 0),
-          0
-        );
+        let totalSubs = 0;
+        let totalAtt = 0;
+        let totalSt = 0;
+        let submittedSt = 0;
 
-        lacStats.push({
-          lac,
-          totalSubmissions: lacSubmissions.length,
-          totalAttendances,
-          submittedStations: uniqueStations.size,
-          totalStations: lacStations.length,
+        lacs.forEach((lac) => {
+          const lacSubmissions = submissions.filter((s) => s.lac === lac);
+          const lacStations = allStations.filter((s) => s.lac === lac);
+          const uniqueStations = new Set(lacSubmissions.map((s) => s.polling_station));
+
+          const totalAttendances = lacSubmissions.reduce(
+            (sum, s) => sum + (s.total_attendances || 0),
+            0
+          );
+
+          console.log(`${lac}: ${lacSubmissions.length} submissions, ${totalAttendances} attendances`);
+
+          lacStats.push({
+            lac,
+            totalSubmissions: lacSubmissions.length,
+            totalAttendances,
+            submittedStations: uniqueStations.size,
+            totalStations: lacStations.length,
+          });
+
+          totalSubs += lacSubmissions.length;
+          totalAtt += totalAttendances;
+          totalSt += lacStations.length;
+          submittedSt += uniqueStations.size;
         });
 
-        totalSubs += lacSubmissions.length;
-        totalAtt += totalAttendances;
-        totalSt += lacStations.length;
-        submittedSt += uniqueStations.size;
-      });
+        console.log('Overall stats:', { totalSubs, totalAtt, totalSt, submittedSt });
 
-      setStats(lacStats);
-      setOverallStats({
-        totalSubmissions: totalSubs,
-        totalAttendances: totalAtt,
-        totalStations: totalSt,
-        submittedStations: submittedSt,
-      });
+        setStats(lacStats);
+        setOverallStats({
+          totalSubmissions: totalSubs,
+          totalAttendances: totalAtt,
+          totalStations: totalSt,
+          submittedStations: submittedSt,
+        });
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Exception in fetchAnalytics:', error);
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   if (loading) {

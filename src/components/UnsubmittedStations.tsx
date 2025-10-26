@@ -35,32 +35,47 @@ export default function UnsubmittedStations() {
   }, [selectedLAC, unsubmittedStations]);
 
   const fetchUnsubmittedStations = async () => {
-    setLoading(true);
+    try {
+      const { data: allStations, error: stationsError } = await supabase
+        .from('polling_stations')
+        .select('*')
+        .order('lac')
+        .order('station_name');
 
-    const { data: allStations } = await supabase
-      .from('polling_stations')
-      .select('*')
-      .order('lac')
-      .order('station_name');
+      const { data: submissions, error: submissionsError } = await supabase
+        .from('man_ki_bat_submissions')
+        .select('polling_station, lac');
 
-    const { data: submissions } = await supabase
-      .from('man_ki_bat_submissions')
-      .select('polling_station, lac');
+      if (stationsError) {
+        console.error('Error fetching stations:', stationsError);
+        setLoading(false);
+        return;
+      }
 
-    if (allStations && submissions) {
-      const submittedStationNames = new Set(
-        submissions.map((s) => `${s.lac}-${s.polling_station}`)
-      );
+      if (submissionsError) {
+        console.error('Error fetching submissions:', submissionsError);
+        setLoading(false);
+        return;
+      }
 
-      const unsubmitted = allStations.filter(
-        (station) => !submittedStationNames.has(`${station.lac}-${station.station_name}`)
-      );
+      if (allStations && submissions) {
+        const submittedStationNames = new Set(
+          submissions.map((s) => `${s.lac}-${s.polling_station}`)
+        );
 
-      setUnsubmittedStations(unsubmitted);
-      setFilteredStations(unsubmitted);
+        const unsubmitted = allStations.filter(
+          (station) => !submittedStationNames.has(`${station.lac}-${station.station_name}`)
+        );
+
+        setUnsubmittedStations(unsubmitted);
+        setFilteredStations(unsubmitted);
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Exception in fetchUnsubmittedStations:', error);
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   if (loading) {
