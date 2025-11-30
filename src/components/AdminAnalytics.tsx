@@ -53,54 +53,59 @@ export default function AdminAnalytics() {
         return;
       }
 
-      if (submissions && allStations) {
-        console.log('Total submissions fetched:', submissions.length);
-        console.log('Total stations fetched:', allStations.length);
+      const submissionsData = submissions || [];
+      const stationsData = allStations || [];
 
-        const lacs = ['78-DHEMAJI (ST)', '79-SISIBORGAON', '80-JONAI (ST)'];
-        const lacStats: LACStats[] = [];
+      console.log('Total submissions fetched:', submissionsData.length);
+      console.log('Total stations fetched:', stationsData.length);
 
-        let totalSubs = 0;
-        let totalAtt = 0;
-        let totalSt = 0;
-        let submittedSt = 0;
+      const lacs = ['78-DHEMAJI (ST)', '79-SISIBORGAON', '80-JONAI (ST)'];
+      const lacStats: LACStats[] = [];
 
-        lacs.forEach((lac) => {
-          const lacSubmissions = submissions.filter((s) => s.lac === lac);
-          const lacStations = allStations.filter((s) => s.lac === lac);
-          const uniqueStations = new Set(lacSubmissions.map((s) => s.polling_station));
+      let totalSubs = 0;
+      let totalAtt = 0;
+      let totalSt = 0;
+      let submittedSt = 0;
 
-          const totalAttendances = lacSubmissions.reduce(
-            (sum, s) => sum + (s.total_attendances || 0),
-            0
-          );
+      lacs.forEach((lac) => {
+        const lacSubmissions = submissionsData.filter((s) => s?.lac === lac);
+        const lacStations = stationsData.filter((s) => s?.lac === lac);
+        const uniqueStations = new Set(
+          lacSubmissions
+            .map((s) => s?.polling_station)
+            .filter((station) => station)
+        );
 
-          console.log(`${lac}: ${lacSubmissions.length} submissions, ${totalAttendances} attendances`);
+        const totalAttendances = lacSubmissions.reduce(
+          (sum, s) => sum + (Number(s?.total_attendances) || 0),
+          0
+        );
 
-          lacStats.push({
-            lac,
-            totalSubmissions: lacSubmissions.length,
-            totalAttendances,
-            submittedStations: uniqueStations.size,
-            totalStations: lacStations.length,
-          });
+        console.log(`${lac}: ${lacSubmissions.length} submissions, ${totalAttendances} attendances`);
 
-          totalSubs += lacSubmissions.length;
-          totalAtt += totalAttendances;
-          totalSt += lacStations.length;
-          submittedSt += uniqueStations.size;
+        lacStats.push({
+          lac,
+          totalSubmissions: lacSubmissions.length,
+          totalAttendances,
+          submittedStations: uniqueStations.size,
+          totalStations: lacStations.length,
         });
 
-        console.log('Overall stats:', { totalSubs, totalAtt, totalSt, submittedSt });
+        totalSubs += lacSubmissions.length;
+        totalAtt += totalAttendances;
+        totalSt += lacStations.length;
+        submittedSt += uniqueStations.size;
+      });
 
-        setStats(lacStats);
-        setOverallStats({
-          totalSubmissions: totalSubs,
-          totalAttendances: totalAtt,
-          totalStations: totalSt,
-          submittedStations: submittedSt,
-        });
-      }
+      console.log('Overall stats:', { totalSubs, totalAtt, totalSt, submittedSt });
+
+      setStats(lacStats);
+      setOverallStats({
+        totalSubmissions: totalSubs,
+        totalAttendances: totalAtt,
+        totalStations: totalSt,
+        submittedStations: submittedSt,
+      });
 
       setLoading(false);
     } catch (error) {

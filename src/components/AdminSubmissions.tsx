@@ -38,8 +38,11 @@ export default function AdminSubmissions() {
 
       if (error) {
         console.error('Error fetching submissions:', error);
-      } else if (data) {
-        setSubmissions(data);
+        setSubmissions([]);
+      } else {
+        const submissionsData = data || [];
+        console.log('Submissions fetched:', submissionsData.length);
+        setSubmissions(submissionsData);
       }
 
       setLoading(false);

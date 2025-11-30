@@ -58,18 +58,27 @@ export default function UnsubmittedStations() {
         return;
       }
 
-      if (allStations && submissions) {
-        const submittedStationNames = new Set(
-          submissions.map((s) => `${s.lac}-${s.polling_station}`)
-        );
+      const stationsData = allStations || [];
+      const submissionsData = submissions || [];
 
-        const unsubmitted = allStations.filter(
-          (station) => !submittedStationNames.has(`${station.lac}-${station.station_name}`)
-        );
+      console.log('Total stations:', stationsData.length);
+      console.log('Total submissions:', submissionsData.length);
 
-        setUnsubmittedStations(unsubmitted);
-        setFilteredStations(unsubmitted);
-      }
+      const submittedStationNames = new Set(
+        submissionsData
+          .filter((s) => s?.lac && s?.polling_station)
+          .map((s) => `${s.lac}-${s.polling_station}`)
+      );
+
+      const unsubmitted = stationsData.filter(
+        (station) => station?.lac && station?.station_name &&
+        !submittedStationNames.has(`${station.lac}-${station.station_name}`)
+      );
+
+      console.log('Unsubmitted stations:', unsubmitted.length);
+
+      setUnsubmittedStations(unsubmitted);
+      setFilteredStations(unsubmitted);
 
       setLoading(false);
     } catch (error) {
