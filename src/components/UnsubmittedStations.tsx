@@ -12,6 +12,7 @@ export default function UnsubmittedStations() {
   const [unsubmittedStations, setUnsubmittedStations] = useState<PollingStation[]>([]);
   const [filteredStations, setFilteredStations] = useState<PollingStation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [selectedLAC, setSelectedLAC] = useState<string>('All');
 
   const lacs = ['All', '78-DHEMAJI (ST)', '79-SISIBORGAON', '80-JONAI (ST)'];
@@ -21,7 +22,7 @@ export default function UnsubmittedStations() {
 
     const interval = setInterval(() => {
       fetchUnsubmittedStations();
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
@@ -35,6 +36,9 @@ export default function UnsubmittedStations() {
   }, [selectedLAC, unsubmittedStations]);
 
   const fetchUnsubmittedStations = async () => {
+    if (isFetching) return;
+
+    setIsFetching(true);
     try {
       const { data: allStations, error: stationsError } = await supabase
         .from('polling_stations')
@@ -84,13 +88,28 @@ export default function UnsubmittedStations() {
     } catch (error) {
       console.error('Exception in fetchUnsubmittedStations:', error);
       setLoading(false);
+    } finally {
+      setIsFetching(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      <div className="space-y-6 animate-pulse">
+        <div>
+          <div className="h-8 bg-gray-200 rounded w-72 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-gray-200 rounded-lg h-24"></div>
+            ))}
+          </div>
+          <div className="flex gap-2 flex-wrap mb-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-gray-200 rounded-lg h-10 w-24"></div>
+            ))}
+          </div>
+        </div>
+        <div className="bg-gray-200 rounded-lg h-96"></div>
       </div>
     );
   }

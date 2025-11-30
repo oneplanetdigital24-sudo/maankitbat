@@ -17,6 +17,7 @@ interface Submission {
 export default function AdminSubmissions() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -24,12 +25,15 @@ export default function AdminSubmissions() {
 
     const interval = setInterval(() => {
       fetchSubmissions();
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
 
   const fetchSubmissions = async () => {
+    if (isFetching) return;
+
+    setIsFetching(true);
     try {
       const { data, error } = await supabase
         .from('man_ki_bat_submissions')
@@ -49,6 +53,8 @@ export default function AdminSubmissions() {
     } catch (error) {
       console.error('Exception in fetchSubmissions:', error);
       setLoading(false);
+    } finally {
+      setIsFetching(false);
     }
   };
 
@@ -65,8 +71,18 @@ export default function AdminSubmissions() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      <div className="space-y-4 animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-64 mb-4"></div>
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="border-2 border-gray-200 rounded-lg p-6">
+            <div className="h-6 bg-gray-200 rounded w-32 mb-4"></div>
+            <div className="space-y-3">
+              <div className="h-4 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

@@ -13,6 +13,7 @@ interface LACStats {
 export default function AdminAnalytics() {
   const [stats, setStats] = useState<LACStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [overallStats, setOverallStats] = useState({
     totalSubmissions: 0,
     totalAttendances: 0,
@@ -25,12 +26,15 @@ export default function AdminAnalytics() {
 
     const interval = setInterval(() => {
       fetchAnalytics();
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
 
   const fetchAnalytics = async () => {
+    if (isFetching) return;
+
+    setIsFetching(true);
     try {
       const { data: submissions, error: submissionsError } = await supabase
         .from('man_ki_bat_submissions')
@@ -111,13 +115,30 @@ export default function AdminAnalytics() {
     } catch (error) {
       console.error('Exception in fetchAnalytics:', error);
       setLoading(false);
+    } finally {
+      setIsFetching(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      <div className="space-y-6 animate-pulse">
+        <div>
+          <div className="h-8 bg-gray-200 rounded w-48 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-gray-200 rounded-lg h-32"></div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="h-8 bg-gray-200 rounded w-56 mb-4"></div>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-gray-200 rounded-lg h-48"></div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
